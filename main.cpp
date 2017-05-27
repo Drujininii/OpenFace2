@@ -14,6 +14,8 @@ using namespace std;
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
+#include <opencv2/videoio.hpp>
+#include <opencv/cv.hpp>
 
 
 #define INPUT_IMAGE "./image3.jpg"
@@ -48,42 +50,58 @@ int main(int argc, char** argv)
 
 
         //вот это выпили, как только все запустится
-        if (argc == 1)
-        {
-            cout << "Call this program like this:" << endl;
-            cout << "./face_landmark_detection_ex shape_predictor_68_face_landmarks.dat faces/*.jpg" << endl;
-            cout << "\nYou can get the shape_predictor_68_face_landmarks.dat file from:\n";
-            cout << "http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2" << endl;
-            return 0;
-        }
+//        if (argc == 1)
+//        {
+//            cout << "Call this program like this:" << endl;
+//            cout << "./face_landmark_detection_ex shape_predictor_68_face_landmarks.dat faces/*.jpg" << endl;
+//            cout << "\nYou can get the shape_predictor_68_face_landmarks.dat file from:\n";
+//            cout << "http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2" << endl;
+//            return 0;
+//        }
 
         //каждое лицо в этой проге берут в прямоугольник и находят на нем 68 точек
+        image_window win, win_faces;//это можно к чертям удалить
+        cv::VideoCapture capture(0);
+        if(!capture.isOpened())  // check if we succeeded
+        {
+            return -1;
+        }
+        //цикл по всем фоткам, которые ты дал в аргументе
+
+//-------------------
+
         frontal_face_detector detector = get_frontal_face_detector();
         shape_predictor sp;
-        deserialize(argv[1]) >> sp;
-        image_window win, win_faces;//это можно к чертям удалить
-        //цикл по всем фоткам, которые ты дал в аргументе
-        for (int i = 2; i < argc; ++i)
+        deserialize("./shape_predictor_68_face_landmarks.dat") >> sp;
+
+        cv::Mat image_PROP;
+        capture.read(image_PROP);
+        dlib::cv_image<bgr_pixel> cvImage(image_PROP);
+        std::vector<rectangle> dets;
+
+        for (;;)
         {
-            const std::string image_name = INPUT_IMAGE;
+            std::vector<full_object_detection> shapes;
             cv::Mat image;
-            image = cv::imread(image_name);
-            dlib::cv_image<bgr_pixel> cvImage(image);
+            capture.read(image);
+            cv::flip(image, image, 0);
+            cvImage = image;
 
             //опеределяем прямоугольники для каждого лица
-            std::vector<rectangle> dets = detector(cvImage);
+            dets = detector(cvImage);
             cout << "Number of faces detected: " << dets.size() << endl;
 
             // Now we will go ask the shape_predictor to tell us the pose of
             // each face we detected.
-            std::vector<full_object_detection> shapes;
+
+
             for (unsigned long j = 0; j < dets.size(); ++j)//для всех обнаруженных лиц
             {
                 full_object_detection shape = sp(cvImage, dets[j]);//здесь получаем объект из 68 точек на лице
                 shapes.push_back(shape);
             }
 
-
+//----------------------------------
             //здесь рисуется
             win.clear_overlay();
 //первые 16 точек - это овал лица
@@ -91,16 +109,15 @@ int main(int argc, char** argv)
             //пронумеруем точки
             size_t min_num_point = 0;
 
-            for (size_t k = min_num_point; k < shapes[0].num_parts(); k++) {//в цикле вывел тебе пронумерованные точки.
-                //а то так и не нашел инфу на них
-                std::string number_of_point = toString(k);
-                win.add_overlay(
-                        dlib::image_window::overlay_rect(shapes[0].part(k), rgb_pixel(255, 0, 0), number_of_point));
-//            win.add_overlay(render_face_detections(shapes)); //этой строкой можно обрисовать маску на все лицо
-            }
-            cout << "Hit enter to process the next image..." << endl;
-            cin.get();
-
+//            for (size_t k = min_num_point; k < shapes[0].num_parts(); k++) {//в цикле вывел тебе пронумерованные точки.
+//                //а то так и не нашел инфу на них
+//                std::string number_of_point = toString(k);
+//                win.add_overlay(
+//                        dlib::image_window::overlay_rect(shapes[0].part(k),
+//                                                         rgb_pixel(255, 0, 0), number_of_point));
+            win.add_overlay(render_face_detections(shapes)); //этой строкой можно обрисовать маску на все лицо
+            if(cv::waitKey(30) == 'e')
+                break;
         }
     }
     catch (exception& e)
