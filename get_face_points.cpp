@@ -1,6 +1,22 @@
 //
 // Created by ed_grolsh on 27.05.17.
 //
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/image_processing/render_face_detections.h>
+#include <dlib/image_processing.h>
+#include <dlib/gui_widgets.h>
+#include <dlib/image_io.h>
+#include <dlib/opencv.h>
+#include <iostream>
+
+
+#include <string>
+#include <sstream>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgcodecs/imgcodecs_c.h>
+#include <opencv2/videoio.hpp>
+#include <opencv/cv.hpp>
 
 #include "get_face_points.hpp"
 
