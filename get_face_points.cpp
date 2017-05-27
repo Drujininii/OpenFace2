@@ -11,16 +11,16 @@ void get_face_points() {
     shape_predictor sp;
     deserialize(argv[1]) >> sp;
     std::vector<cv::Point> face_points;//вектор точек
+    dlib::cv_image<bgr_pixel> cvImage(frame);
+    std::vector<rectangle> dets = detector(cvImage);
+    std::vector<full_object_detection> shapes;
     //------
 
-    dlib::cv_image<bgr_pixel> cvImage(frame);
-
+    cvImage = frame;
+    dets = detector(cvImage);
     //опеределяем прямоугольники для каждого лица
-    std::vector<rectangle> dets = detector(cvImage);
-
     // Now we will go ask the shape_predictor to tell us the pose of
     // each face we detected.
-    std::vector<full_object_detection> shapes;
     for (unsigned long j = 0; j < dets.size(); ++j)//для всех обнаруженных лиц
     {
         full_object_detection shape = sp(cvImage, dets[j]);//здесь получаем объект из 68 точек на лице
